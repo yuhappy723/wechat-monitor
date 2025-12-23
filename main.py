@@ -1,21 +1,20 @@
 import requests
 from bs4 import BeautifulSoup
-import datetime
 import json
 import os
+from datetime import datetime
 
-# ====== 配置区 ======
-WECHAT_NAME = "这里替换成公众号名称"
-FEISHU_WEBHOOK = "这里替换成飞书Webhook地址"
+# ===== 配置区（你只改这里） =====
+WECHAT_NAME = "工程质量检测交流"
+WPS_WEBHOOK = "https://www.kdocs.cn/chatflow/api/v2/func/webhook/37Eu6NBevYdhCyrGGDMirmr8yA5"
 STATE_FILE = "state.json"
-# ===================
+# ================================
 
 headers = {
     "User-Agent": "Mozilla/5.0"
 }
 
 url = f"https://weixin.sogou.com/weixin?type=2&query={WECHAT_NAME}"
-
 res = requests.get(url, headers=headers, timeout=10)
 soup = BeautifulSoup(res.text, "html.parser")
 
@@ -35,23 +34,13 @@ for a in articles[:3]:
         continue
 
     payload = {
-        "msg_type": "interactive",
-        "card": {
-            "header": {"title": {"content": "公众号新推文", "tag": "plain_text"}},
-            "elements": [
-                {"tag": "div", "text": {"content": f"**{title}**", "tag": "lark_md"}},
-                {"tag": "action",
-                 "actions": [{
-                     "tag": "button",
-                     "text": {"content": "查看原文", "tag": "plain_text"},
-                     "url": link,
-                     "type": "default"
-                 }]}
-            ]
-        }
+        "account": WECHAT_NAME,
+        "title": title,
+        "link": link,
+        "publish_time": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     }
 
-    requests.post(FEISHU_WEBHOOK, json=payload)
+    requests.post(WPS_WEBHOOK, json=payload, timeout=10)
     history.append(link)
 
 with open(STATE_FILE, "w", encoding="utf-8") as f:
